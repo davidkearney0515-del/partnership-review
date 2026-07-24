@@ -579,19 +579,19 @@ function pcard(p){
 const MONTHLY = {
   'FanaticsTV': {
     months:['Mar','Apr','May','Jun'],
-    tiktok:{Mar:837860, Jun:1727162},
+    tiktok:{Mar:837860, Apr:1916054, May:2692438, Jun:1727162},
     shows:{
       'Kenty Blitz':{ baselineUntil:null, data:{
-        Mar:{yt:248960, soc:1280974, ac:130320},
-        Apr:{yt:582700, soc:2750000, ac:146000},
-        May:null,
-        Jun:{yt:1051678, soc:3690469, ac:208224}
+        Mar:{yt:248960,  soc:1294709, ac:130320},
+        Apr:{yt:806523,  soc:1101241, ac:154373},
+        May:{yt:1404588, soc:1658585, ac:204109},
+        Jun:{yt:1147033, soc:3690469, ac:208224}
       }},
       'Rugby League Insider':{ baselineUntil:'May', data:{
-        Mar:{yt:139048, soc:342528, ac:24421},
-        Apr:null,
-        May:{yt:1200000, soc:3700000, ac:42800},
-        Jun:{yt:951749, soc:2588082, ac:53774}
+        Mar:{yt:139048,  soc:500865,  ac:24421},
+        Apr:{yt:421114,  soc:314809,  ac:34957},
+        May:{yt:1230400, soc:1436162, ac:44552},
+        Jun:{yt:951923,  soc:2588082, ac:53774}
       }}
     }
   }
@@ -630,8 +630,8 @@ function monthlyGraphPanel(p){
   return `<div class="panel"><div class="panel-head"><h3>Monthly performance</h3><div class="filters">${btns}</div></div><div class="panel-body">
     <div style="margin-bottom:10px">${legend}</div>
     <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;display:block"><line x1="${x0}" y1="${base}" x2="${W-10}" y2="${base}" stroke="#E1E4E9"/>${bars}</svg>
-    <div style="margin-top:8px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line-soft);padding-top:10px"><b>TikTok — Fanatics channel total</b> (channel-wide, not show-attributable): Mar ${aud(M.tiktok.Mar)} → Jun ${aud(M.tiktok.Jun)}.</div>
-    <div style="margin-top:6px;font-size:11.5px;color:var(--ink-faint)">RLI Mar–May greyed as pre-sponsorship baseline (delivery clock from June). Apr/May were reported with combined social only; Kenty Blitz includes Ask Kenty. Gaps (–) are months a show wasn't reported.</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line-soft);padding-top:10px"><b>TikTok — Fanatics channel total</b> (channel-wide, not show-attributable): ${M.months.filter(mo=>M.tiktok[mo]!=null).map(mo=>mo+' '+aud(M.tiktok[mo])).join(' · ')}.</div>
+    <div style="margin-top:6px;font-size:11.5px;color:var(--ink-faint)">RLI Mar–May greyed as pre-sponsorship baseline (delivery clock from June). Kenty Blitz includes Ask Kenty. Figures from Fanatics' reissued per-platform reports (Mar–Jun 2026).</div>
   </div></div>`;
 }
 function setGraphMetric(m){ view.graphMetric=m; render(); }
