@@ -575,6 +575,68 @@ function pcard(p){
 }
 
 /* ============================================================ DETAIL ============================================================ */
+/* ===== Monthly performance data (extracted from Fanatics views reports; reconciles to report totals) ===== */
+const MONTHLY = {
+  'FanaticsTV': {
+    months:['Mar','Apr','May','Jun'],
+    tiktok:{Mar:837860, Jun:1727162},
+    shows:{
+      'Kenty Blitz':{ baselineUntil:null, data:{
+        Mar:{yt:248960, soc:1280974, ac:130320},
+        Apr:{yt:582700, soc:2750000, ac:146000},
+        May:null,
+        Jun:{yt:1051678, soc:3690469, ac:208224}
+      }},
+      'Rugby League Insider':{ baselineUntil:'May', data:{
+        Mar:{yt:139048, soc:342528, ac:24421},
+        Apr:null,
+        May:{yt:1200000, soc:3700000, ac:42800},
+        Jun:{yt:951749, soc:2588082, ac:53774}
+      }}
+    }
+  }
+};
+function monthlyGraphPanel(p){
+  const M=MONTHLY[p.name]; if(!M) return '';
+  const metric=view.graphMetric||'total';
+  const METRICS=[['total','Total'],['yt','YouTube'],['soc','Social (FB+IG)'],['ac','Acast']];
+  const val=d=> !d?null:(metric==='total'?(d.yt+d.soc+d.ac):d[metric]);
+  const showNames=Object.keys(M.shows);
+  const palette=['#2F6BE0','#7A5AF8'];
+  const colors={}; showNames.forEach((s,i)=>colors[s]=palette[i%palette.length]);
+  let max=0; M.months.forEach(mo=>showNames.forEach(s=>{const v=val(M.shows[s].data[mo]); if(v!==null&&v>max)max=v;}));
+  max=max*1.14||1;
+  const W=640,H=290,top=42,base=238,x0=34,plotW=W-46;
+  const groupW=plotW/M.months.length, barW=Math.min(30,(groupW-26)/showNames.length);
+  let bars='';
+  M.months.forEach((mo,gi)=>{
+    const gx=x0+gi*groupW;
+    showNames.forEach((s,si)=>{
+      const sh=M.shows[s], d=sh.data[mo], v=val(d);
+      const spread=showNames.length*barW+(showNames.length-1)*6;
+      const bx=gx+groupW/2-spread/2+si*(barW+6);
+      if(v===null){ bars+=`<text x="${(bx+barW/2).toFixed(1)}" y="${base-4}" text-anchor="middle" font-size="10" fill="#B8BDC7">–</text>`; return; }
+      const h=(v/max)*(base-top);
+      const baseline=sh.baselineUntil && M.months.indexOf(mo)<=M.months.indexOf(sh.baselineUntil);
+      const col=colors[s];
+      bars+=`<rect x="${bx.toFixed(1)}" y="${(base-h).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${col}" ${baseline?`fill-opacity="0.28" stroke="${col}" stroke-dasharray="3 2"`:''}></rect>`;
+      bars+=`<text x="${(bx+barW/2).toFixed(1)}" y="${(base-h-5).toFixed(1)}" text-anchor="middle" font-size="9" fill="#5A616E" font-family="'JetBrains Mono',monospace">${aud(v)}</text>`;
+    });
+    bars+=`<text x="${(gx+groupW/2).toFixed(1)}" y="${base+16}" text-anchor="middle" font-size="11" fill="#5A616E" font-weight="600">${mo}</text>`;
+  });
+  const legend=showNames.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-right:14px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[s]};display:inline-block"></span>${esc(s)}</span>`).join('')
+    +`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-faint)"><span style="width:10px;height:10px;border-radius:2px;background:${palette[1]};opacity:.35;border:1px dashed ${palette[1]};display:inline-block"></span>pre-sponsorship (not counted)</span>`;
+  const btns=METRICS.map(([k,l])=>`<button class="chip ${metric===k?'on':''}" onclick="setGraphMetric('${k}')">${l}</button>`).join('');
+  return `<div class="panel"><div class="panel-head"><h3>Monthly performance</h3><div class="filters">${btns}</div></div><div class="panel-body">
+    <div style="margin-bottom:10px">${legend}</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;display:block"><line x1="${x0}" y1="${base}" x2="${W-10}" y2="${base}" stroke="#E1E4E9"/>${bars}</svg>
+    <div style="margin-top:8px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line-soft);padding-top:10px"><b>TikTok — Fanatics channel total</b> (channel-wide, not show-attributable): Mar ${aud(M.tiktok.Mar)} → Jun ${aud(M.tiktok.Jun)}.</div>
+    <div style="margin-top:6px;font-size:11.5px;color:var(--ink-faint)">RLI Mar–May greyed as pre-sponsorship baseline (delivery clock from June). Apr/May were reported with combined social only; Kenty Blitz includes Ask Kenty. Gaps (–) are months a show wasn't reported.</div>
+  </div></div>`;
+}
+function setGraphMetric(m){ view.graphMetric=m; render(); }
+Object.assign(window,{setGraphMetric});
+
 function renderDetail(){
   const p=STATE.partnerships.find(x=>x.id===view.pid);
   const s=currentSnap(p); const m=mediaRoll(s);
@@ -628,6 +690,9 @@ function renderDetail(){
   html+=`</div></div>`;
 
   html+=`</div>`; // grid2
+
+  /* monthly performance graph (additive; renders when monthly data exists for this partnership) */
+  html+=monthlyGraphPanel(p);
 
   /* assessment */
   const a=s.assessment;
